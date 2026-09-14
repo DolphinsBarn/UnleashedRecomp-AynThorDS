@@ -1,8 +1,9 @@
 # AYN Thor test fork: 0.5.3-thor.1
 
-Status: source-level fix candidate. The recompiler tests pass; a full APK has
-not been built, and gameplay has not been tested on a Thor. This is not a
-confirmed fix for the supplied freeze.
+Status: an ARM64 test APK has been built and its signature, ZIP alignment,
+package identity, native dependencies, and JNI entry points have been checked.
+The recompiler tests pass. Gameplay has not been tested on a Thor, so this
+remains a fix candidate rather than a confirmed fix for the supplied freeze.
 
 ## Source baseline
 
@@ -68,6 +69,16 @@ Verified locally using the Clang 21.1 frontend shipped in Zig 0.16:
 `CC`, `CXX` and `ARM_CXX` can override compiler commands. Outputs go under
 `out/tests/memory-order`. The `Thor source checks` workflow runs these checks
 without access to game files or secrets.
+
+The full local build used NDK `29.0.14206865` and the original bundled DXC
+`1.8 (4662-416fab6b)`. All 261 generated PPC translation units compiled. The
+generated game code contains 32 full fences and 10,679 atomic reservation
+loads. Java compilation, native linking, and Gradle APK packaging succeeded.
+
+Test APK: `Unleashed-Thor-Test-0.5.3-thor.1.apk` (63,440,122 bytes).
+SHA-256: `565f767f4314e8e1ddf62c4636c6c40be6cbd535d4067bce26ab5485bca8c025`.
+This debug-signed APK is supplied directly to the device owner; it is not
+a public GitHub release. Keep its signing key for subsequent test updates.
 
 ## Producing an APK
 
