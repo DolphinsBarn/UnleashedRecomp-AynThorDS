@@ -71,7 +71,9 @@ without access to game files or secrets.
 
 ## Producing an APK
 
-The three required build inputs are absent from the public source:
+The supplied game inputs have passed executable patching, PPC generation,
+archive decompression, and shader compilation locally. The raw inputs remain
+private and are absent from the public source:
 
 | Input | Location in an installed/extracted game |
 | --- | --- |

@@ -63,7 +63,7 @@ jobs:
       - name: Install build dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ninja-build ccache
+          sudo apt-get install -y ninja-build ccache clang pkg-config
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -73,6 +73,9 @@ jobs:
 
       - name: Install Android NDK
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" >/dev/null
+
+      - name: Install pinned Linux shader compiler
+        run: python3 tools/build/setup_linux_dxc.py
 
       - name: Set up vcpkg
         run: |
@@ -98,6 +101,8 @@ jobs:
       # (mirrors build_host_tools.bat + build_android_configure.bat on Windows).
       - name: Build host tools
         env:
+          CC: clang
+          CXX: clang++
           VCPKG_ROOT: ${{ github.workspace }}/thirdparty/vcpkg
         run: |
           cmake -S . -B out/build/host-tools -G Ninja \

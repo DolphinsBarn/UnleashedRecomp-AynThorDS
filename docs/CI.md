@@ -40,9 +40,11 @@ Remember that installs only update in place when the signing key stays the same.
 
 1. Checks out this repository plus the private game-files repository, staging
    the latter into `UnleashedRecompLib/private/`.
-2. Builds the host code-generation tools (XenonRecomp, XenosRecomp, file_to_c,
+2. Downloads the pinned, checksum-verified official Linux DXC package with
+   `python3 tools/build/setup_linux_dxc.py`, then builds the host code-generation tools (XenonRecomp, XenosRecomp, file_to_c,
    x_decompress) natively for the runner — a `UNLEASHED_RECOMP_HOST_TOOLS_ONLY`
-   CMake pass, mirroring `build_host_tools.bat`.
+   CMake pass using Clang, mirroring `build_host_tools.bat`. The host shader
+   compiler includes the same `UNLEASHED_RECOMP` settings as the integrated build.
 3. Clones vcpkg at the `builtin-baseline` from `vcpkg.json` and cross-compiles
    `libmain.so` for `arm64-v8a` (NDK r29, `android-29`), passing the host tools
    via `UNLEASHED_RECOMP_HOST_*` — mirroring `build_android_configure.bat`.
