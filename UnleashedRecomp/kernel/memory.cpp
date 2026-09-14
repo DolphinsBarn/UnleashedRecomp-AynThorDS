@@ -3,6 +3,10 @@
 #include <os/logger.h>
 
 #include <atomic>
+#ifdef __ANDROID__
+#include <dlfcn.h>
+#include <unwind.h>
+#endif
 
 Memory::Memory()
 {
@@ -50,6 +54,66 @@ void* MmGetHostAddress(uint32_t ptr)
     return g_memory.Translate(ptr);
 }
 
+
+#ifdef __ANDROID__
+namespace
+{
+struct GuestFailureTrace
+{
+    uintptr_t addresses[48]{};
+    size_t count{};
+};
+
+_Unwind_Reason_Code CollectGuestFailureFrame(_Unwind_Context* context, void* argument)
+{
+    auto& trace = *static_cast<GuestFailureTrace*>(argument);
+    if (trace.count == std::size(trace.addresses))
+        return _URC_END_OF_STACK;
+    const auto address = static_cast<uintptr_t>(_Unwind_GetIP(context));
+    if (address != 0)
+        trace.addresses[trace.count++] = address;
+    return _URC_NO_REASON;
+}
+}
+#endif
+
+void LogGuestFailure(const char* reason, PPCContext& ctx, uint32_t target)
+{
+#ifdef __ANDROID__
+    // This runs BEFORE entering the signal handler. Unwinding and normal logging
+    // here avoid adding allocator/loader work to the fatal-signal handler.
+    LOGF_ERROR("Guest failure: reason={} target={:08X} r1={:08X} r3={:08X} r4={:08X} r5={:08X} r13={:08X}",
+        reason, target, ctx.r1.u32, ctx.r3.u32, ctx.r4.u32, ctx.r5.u32, ctx.r13.u32);
+    GuestFailureTrace trace;
+    _Unwind_Backtrace(CollectGuestFailureFrame, &trace);
+    for (size_t i = 0; i < trace.count; ++i)
+    {
+        Dl_info info{};
+        const auto address = trace.addresses[i];
+        if (dladdr(reinterpret_cast<void*>(address), &info) && info.dli_fbase)
+        {
+            const char* module = info.dli_fname ? strrchr(info.dli_fname, '/') : nullptr;
+            module = module ? module + 1 : (info.dli_fname ? info.dli_fname : "unknown");
+            LOGF_ERROR("Guest failure frame #{}: {}+0x{:X}", i, module,
+                address - reinterpret_cast<uintptr_t>(info.dli_fbase));
+        }
+        else
+            LOGF_ERROR("Guest failure frame #{}: pc=0x{:X}", i, address);
+    }
+    // Only inspect a bounded address inside the fully mapped guest heap range.
+    // It is a diagnostic snapshot, not evidence that the object is still alive.
+    if (ctx.r3.u32 >= 0x20000 && uint64_t(ctx.r3.u32) + 32 <= 0x7FEA0000)
+    {
+        for (uint32_t i = 0; i < 8; ++i)
+        {
+            uint32_t word;
+            memcpy(&word, g_memory.base + ctx.r3.u32 + i * 4, sizeof(word));
+            LOGF_ERROR("Guest object word +0x{:02X}: {:08X}", i * 4, ByteSwap(word));
+        }
+    }
+#endif
+}
+
 // Called from the hardened PPC_CALL_INDIRECT_FUNC (UnleashedRecompLib/ppc/ppc_detail.h)
 // when an indirect call's target is outside the recompiled code range or resolves to no
 // host function - a wild jump the process could never survive. Skipping the call keeps
@@ -57,7 +121,10 @@ void* MmGetHostAddress(uint32_t ptr)
 extern "C" void PPCIndirectCallMissing(PPCContext& ctx, uint8_t* base, uint32_t target)
 {
     static std::atomic<uint32_t> s_reportCount{ 0 };
-    if (s_reportCount.fetch_add(1, std::memory_order_relaxed) < 16)
+    const auto report = s_reportCount.fetch_add(1, std::memory_order_relaxed);
+    if (report < 2)
+        LogGuestFailure("unmapped indirect call", ctx, target);
+    if (report < 16)
     {
         LOGF_ERROR("Indirect call to unmapped guest address {:08X} skipped (r3={:08X}).",
             target, ctx.r3.u32);

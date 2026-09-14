@@ -726,6 +726,8 @@ void RtlFillMemoryUlong()
 
 void KeBugCheckEx()
 {
+    if (g_ppcContext)
+        LogGuestFailure("KeBugCheckEx", *g_ppcContext);
     __builtin_debugtrap();
 }
 
@@ -982,6 +984,8 @@ void VdEnableDisableClockGating()
 
 void KeBugCheck()
 {
+    if (g_ppcContext)
+        LogGuestFailure("KeBugCheck", *g_ppcContext);
     __builtin_debugtrap();
 }
 

@@ -1,9 +1,38 @@
-# AYN Thor test fork: 0.5.3-thor.1
+# AYN Thor diagnostic fork: 0.5.3-thor.2
 
-Status: an ARM64 test APK has been built and its signature, ZIP alignment,
-package identity, native dependencies, and JNI entry points have been checked.
-The recompiler tests pass. Gameplay has not been tested on a Thor, so this
-remains a fix candidate rather than a confirmed fix for the supplied freeze.
+Status: the owner tested `0.5.3-thor.1` and it still crashed. Version
+`0.5.3-thor.2` adds diagnostics; it does not claim to fix that crash.
+
+## Follow-up crash and diagnostic update
+
+The new log identifies the first test build and the normal bundled Adreno 740
+Turnip driver (`vulkan.unleashed26_1_wfm_a732.so`, Auto render mode). It enters
+`ActD_MykonosAct1` at 38.819 seconds. At 62.332 seconds, worker tid 18951
+(entry `0x82F56618`) attempts indirect calls to `0x00000000` and `0x00600040`
+with `r3=0x0144D610`. A second worker, tid 18949 with the same entry point,
+then receives SIGTRAP at 62.333 seconds.
+
+The saved matching native symbols resolve `libmain.so+0x16bae7c` to
+`KeBugCheck` in `kernel/imports.cpp` and the logged return address
+`libmain.so+0x3fe7300` to generated function `__imp__sub_831B54D0`.
+This is an explicit guest fatal stop following invalid calls, not evidence
+of a Vulkan device-loss failure. The first build's memory-order change did
+not eliminate the defect. The caller chain and object lifetime are not yet
+known, so no additional race or driver workaround is applied here.
+
+The diagnostic update captures up to 48 native frames, relative to each loaded
+module, for the first two invalid indirect calls and for `KeBugCheck` and
+`KeBugCheckEx`. It records guest argument registers and eight words from an
+in-range guest heap object. Capture happens on the normal execution stack,
+before the signal handler. It preserves the existing call-skip and fatal-stop
+behavior. Frames from different threads retain their log thread IDs.
+
+Install this APK over the first test app. The package remains
+`com.sega.sonicunr.thor`; version code increases from 17 to 18 and the signing
+key is unchanged, so the test app's game files, saves, and settings remain.
+Keep the same driver/settings and repeat the same route. Export the new
+`log.txt` after the crash. Keep the matching diagnostic native symbols to
+resolve its offsets; the first build's offsets cannot be reused.
 
 ## Source baseline
 
@@ -46,7 +75,7 @@ The patch:
 - Disables upstream update prompts for the test fork. Install subsequent test
   APKs manually with the same signing key.
 
-The existing upstream animation-node/quarantine patches remain in place.
+The existing upstream null-page and unmapped-call guards remain in place.
 They are not evidence that the underlying use-after-free has been fixed.
 Full fences can affect performance; no FPS improvement is claimed.
 

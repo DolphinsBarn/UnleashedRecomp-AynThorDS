@@ -21,8 +21,8 @@ android {
         applicationId "com.sega.sonicunr.thor"
         minSdkVersion 29
         targetSdkVersion 34
-        versionCode 17
-        versionName "0.5.3-thor.1"
+        versionCode 18
+        versionName "0.5.3-thor.2"
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-29"

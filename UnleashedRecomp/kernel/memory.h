@@ -45,3 +45,6 @@ struct Memory
 
 extern "C" void* MmGetHostAddress(uint32_t ptr);
 extern Memory g_memory;
+
+// Called on a normal guest execution stack, before a fatal trap or skipped call.
+void LogGuestFailure(const char* reason, PPCContext& ctx, uint32_t target = 0);
