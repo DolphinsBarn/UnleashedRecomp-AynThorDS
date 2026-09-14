@@ -1,4 +1,6 @@
 <resources>
+    <string name="thor_test_app_name" translatable="false">Unleashed Thor Test</string>
+    <string name="thor_manual_updates">This test build is updated manually. Install a newer Thor test APK when available.</string>
     <string name="app_name">UnleashedRecomp</string>
     <string name="documents_game_title">Unleashed Recomp game files</string>
     <string name="documents_game_summary">Active game, mods, configuration and saves</string>

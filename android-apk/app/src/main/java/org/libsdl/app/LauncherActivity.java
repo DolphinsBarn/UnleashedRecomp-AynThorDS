@@ -135,6 +135,11 @@ public final class LauncherActivity extends Activity {
         updates.addView(updateStatus);
         updateButton = button(R.string.update_check, view -> checkForUpdates(true));
         updates.addView(updateButton);
+        if (getPackageName().endsWith(".thor")) {
+            updateStatus.setText(getString(R.string.update_current_version, UpdateManager.currentVersion(this))
+                + "\n" + getString(R.string.thor_manual_updates));
+            updateButton.setVisibility(View.GONE);
+        }
         page.addView(updates);
 
         LinearLayout graphics = collapsibleCard(page, R.string.launcher_graphics, "expand_graphics", false);
@@ -457,6 +462,8 @@ public final class LauncherActivity extends Activity {
     }
 
     private void maybeCheckForUpdates() {
+        // Upstream APKs have a different package/signing key from this test fork.
+        if (getPackageName().endsWith(".thor")) return;
         long lastCheck = prefs.getLong("update_last_check", 0);
         if (System.currentTimeMillis() - lastCheck >= UPDATE_CHECK_INTERVAL_MS) {
             checkForUpdates(false);

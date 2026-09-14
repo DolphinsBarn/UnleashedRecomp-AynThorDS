@@ -5,6 +5,11 @@
 #include <kernel/function.h>
 #include "ppc_context.h"
 
+#ifdef __ANDROID__
+#include <os/logger.h>
+#include <pthread.h>
+#endif
+
 constexpr size_t PCR_SIZE = 0xAB0;
 constexpr size_t TLS_SIZE = 0x100;
 constexpr size_t TEB_SIZE = 0x2E0;
@@ -143,6 +148,16 @@ uint32_t GuestThread::Start(const GuestThreadParams& params)
 {
     const auto procMask = (uint8_t)(params.flags >> 24);
     const auto cpuNumber = procMask == 0 ? 0 : 7 - std::countl_zero(procMask);
+
+#ifdef __ANDROID__
+    // /proc/self/task otherwise calls every worker "SDLThread", obscuring
+    // which guest entry point is spinning when the hang watchdog fires.
+    char threadName[16];
+    snprintf(threadName, sizeof(threadName), "UR-g%08X", params.function);
+    pthread_setname_np(pthread_self(), threadName);
+    LOGF("Guest thread start: entry=0x{:08X}, cpu={}, guest_id=0x{:08X}",
+        params.function, cpuNumber, GetCurrentThreadId());
+#endif
 
     GuestThreadContext ctx(cpuNumber);
     ctx.ppcContext.r3.u64 = params.value;

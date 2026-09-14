@@ -259,6 +259,7 @@ static void DumpThreads()
 
 static void* WatchdogThread(void*)
 {
+    pthread_setname_np(pthread_self(), "UR-watchdog");
     constexpr double HANG_THRESHOLD = 5.0;   // no presented frame for this long => hang
     constexpr double ALIVE_INTERVAL = 5.0;   // otherwise note liveness this often
     constexpr double REDUMP_INTERVAL = 15.0; // while still hung, re-dump this often
@@ -550,6 +551,7 @@ static void LogDeviceInfo()
 
 void os::logger::Init()
 {
+    pthread_setname_np(pthread_self(), "UR-main");
     int pipeFds[2];
     if (pipe(pipeFds) != 0)
         return;
@@ -567,8 +569,8 @@ void os::logger::Init()
     // Create log.txt promptly (and roll the previous one) so a tester always finds a
     // fresh file, even if this run happens to log nothing else before a freeze.
     WriteLogRecord("[logger]", nullptr, "Unleashed Recomp log started", 28);
-    static constexpr char BuildVersion[] = "=== APK VERSION: 0.5.3 (2026-07-22) ===";
-    static constexpr char BuildId[] = "ANDROID_BUILD_ID=0.5.3-release";
+    static constexpr char BuildVersion[] = "=== APK VERSION: 0.5.3-thor.1 (test candidate) ===";
+    static constexpr char BuildId[] = "ANDROID_BUILD_ID=0.5.3-thor.1-memory-order";
     WriteLogRecord("[build]", nullptr, BuildVersion, sizeof(BuildVersion) - 1);
     WriteLogRecord("[build]", nullptr, BuildId, sizeof(BuildId) - 1);
     LogDeviceInfo();

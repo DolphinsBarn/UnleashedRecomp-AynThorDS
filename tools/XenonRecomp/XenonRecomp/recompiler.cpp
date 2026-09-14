@@ -849,7 +849,14 @@ bool Recompiler::Recompile(
         break;
 
     case PPC_INST_EIEIO:
-        // no op
+        // Guest memory ordering must survive recompilation. In particular, ARM64
+        // does not provide x86-style ordering for the volatile guest accesses.
+        // Use a conservative full fence for the weaker barriers as well; this
+        // orders data accesses, not guest instruction-cache maintenance.
+    case PPC_INST_ISYNC:
+    case PPC_INST_LWSYNC:
+    case PPC_INST_SYNC:
+        println("\t__atomic_thread_fence(__ATOMIC_SEQ_CST);");
         break;
 
     case PPC_INST_EXTSB:
@@ -1043,10 +1050,12 @@ bool Recompiler::Recompile(
         break;
 
     case PPC_INST_LDARX:
-        print("\t{}.u64 = *(uint64_t*)(base + ", reserved());
+        // Read the reservation atomically, matching stdcx.'s host atomic CAS.
+        // An ordinary load can be cached/hoisted out of a guest retry loop.
+        print("\t{}.u64 = __atomic_load_n(reinterpret_cast<uint64_t*>(base + ", reserved());
         if (insn.operands[1] != 0)
             print("{}.u32 + ", r(insn.operands[1]));
-        println("{}.u32);", r(insn.operands[2]));
+        println("{}.u32), __ATOMIC_RELAXED);", r(insn.operands[2]));
         println("\t{}.u64 = __builtin_bswap64({}.u64);", r(insn.operands[0]), reserved());
         break;
 
@@ -1187,10 +1196,12 @@ bool Recompiler::Recompile(
         break;
 
     case PPC_INST_LWARX:
-        print("\t{}.u32 = *(uint32_t*)(base + ", reserved());
+        // The guest barrier instructions provide ordering; this load supplies
+        // atomicity and must be performed again on every reservation attempt.
+        print("\t{}.u32 = __atomic_load_n(reinterpret_cast<uint32_t*>(base + ", reserved());
         if (insn.operands[1] != 0)
             print("{}.u32 + ", r(insn.operands[1]));
-        println("{}.u32);", r(insn.operands[2]));
+        println("{}.u32), __ATOMIC_RELAXED);", r(insn.operands[2]));
         println("\t{}.u64 = __builtin_bswap32({}.u32);", r(insn.operands[0]), reserved());
         break;
 
@@ -1206,10 +1217,6 @@ bool Recompiler::Recompile(
         if (insn.operands[1] != 0)
             print("{}.u32 + ", r(insn.operands[1]));
         println("{}.u32));", r(insn.operands[2]));
-        break;
-
-    case PPC_INST_LWSYNC:
-        // no op
         break;
 
     case PPC_INST_LWZ:
@@ -1708,10 +1715,6 @@ bool Recompiler::Recompile(
     case PPC_INST_SUBFIC:
         println("\t{}.ca = {}.u32 <= {};", xer(), r(insn.operands[1]), insn.operands[2]);
         println("\t{}.s64 = {} - {}.s64;", r(insn.operands[0]), int32_t(insn.operands[2]), r(insn.operands[1]));
-        break;
-
-    case PPC_INST_SYNC:
-        // no op
         break;
 
     case PPC_INST_TDLGEI:

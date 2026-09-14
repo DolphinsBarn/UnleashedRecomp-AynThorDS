@@ -1,5 +1,12 @@
 # Unleashed Recompiled for Android
 
+> **AYN Thor test fork — 0.5.3-thor.1:** This branch adds a candidate ARM64
+> memory-ordering fix and clearer hang diagnostics. Source tests pass; an APK
+> and real-device gameplay validation are still pending. See
+> [Thor build and test notes](docs/THOR.md). The test APK uses a separate app
+> identity and is updated manually; the upstream instructions below describe
+> the original Android port.
+
 <img width="640" height="360" alt="715 Sem Título_20260710122452" src="https://github.com/user-attachments/assets/00fa9b4a-4761-4cad-9ecb-060a5bec815d" />
 
 Play the Xbox 360 version of *Sonic Unleashed* natively on a supported Android device.

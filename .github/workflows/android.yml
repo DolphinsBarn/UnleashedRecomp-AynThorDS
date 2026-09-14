@@ -37,12 +37,23 @@ jobs:
       - name: Check out sources
         uses: actions/checkout@v4
 
+      - name: Verify game input configuration
+        env:
+          GAME_FILES_REPO: ${{ vars.GAME_FILES_REPO }}
+          GAME_FILES_TOKEN: ${{ secrets.GAME_FILES_TOKEN }}
+        run: |
+          if [ -z "$GAME_FILES_REPO" ] || [ -z "$GAME_FILES_TOKEN" ]; then
+            echo "::error::Set GAME_FILES_REPO and GAME_FILES_TOKEN for your private default.xex, default.xexp and shader.ar inputs. See docs/CI.md. The Thor source checks run without these files."
+            exit 1
+          fi
+
       - name: Check out game files (private repo)
         uses: actions/checkout@v4
         with:
           repository: ${{ vars.GAME_FILES_REPO }}
           token: ${{ secrets.GAME_FILES_TOKEN }}
           path: game-files
+          persist-credentials: false
 
       - name: Stage game files
         run: |

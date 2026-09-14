@@ -130,6 +130,11 @@ void UpdateChecker::initialize()
 
 bool UpdateChecker::start()
 {
+#ifdef __ANDROID__
+    // This checker targets desktop hedge-dev releases. Android updates belong
+    // to the launcher, and the Thor test fork is updated manually.
+    return false;
+#else
     if (g_updateCheckerInProgress)
     {
         return false;
@@ -141,6 +146,7 @@ bool UpdateChecker::start()
     thread.detach();
 
     return true;
+#endif
 }
 
 UpdateChecker::Result UpdateChecker::check()

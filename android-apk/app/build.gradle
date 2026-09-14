@@ -16,12 +16,13 @@ android {
     defaultConfig {
         // Java sources and JNI bindings stay in the org.libsdl.app namespace (SDL
         // registers natives against those class names); only the install identity
-        // changes. Renaming this orphans data under Android/data/<old id>.
-        applicationId "com.sega.sonicunr"
+        // changes. The test fork installs alongside upstream with its own data
+        // directory because its signing certificate cannot match upstream's.
+        applicationId "com.sega.sonicunr.thor"
         minSdkVersion 29
         targetSdkVersion 34
         versionCode 17
-        versionName "0.5.3"
+        versionName "0.5.3-thor.1"
         externalNativeBuild {
             ndkBuild {
                 arguments "APP_PLATFORM=android-29"

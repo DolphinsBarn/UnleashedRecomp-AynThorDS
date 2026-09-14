@@ -43,6 +43,7 @@
 #if defined(__ANDROID__)
 #include <os/android/storage_android.h>
 #include <os/android/vulkan_driver_android.h>
+#include <pthread.h>
 #endif
 
 #if defined(ASYNC_PSO_DEBUG) || defined(PSO_CACHING)
@@ -5490,6 +5491,9 @@ static void ProcSetPixelShader(const RenderCommand& cmd)
 
 static std::thread g_renderThread([]
     {
+#ifdef __ANDROID__
+        pthread_setname_np(pthread_self(), "UR-render");
+#endif
 #ifdef _WIN32
         SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
         GuestThread::SetThreadName(GetCurrentThreadId(), "Render Thread");
@@ -6863,6 +6867,9 @@ static void CompilePipeline(XXH64_hash_t pipelineHash, const PipelineState& pipe
 
 static void PipelineCompilerThread()
 {
+#ifdef __ANDROID__
+    pthread_setname_np(pthread_self(), "UR-pipeline");
+#endif
 #ifdef _WIN32
     int threadPriority = THREAD_PRIORITY_LOWEST;
     SetThreadPriority(GetCurrentThread(), threadPriority);
@@ -7716,6 +7723,9 @@ static bool CheckMadeAll(const T& modelData)
 
 static void PipelineTaskConsumerThread()
 {
+#ifdef __ANDROID__
+    pthread_setname_np(pthread_self(), "UR-pso-tasks");
+#endif
 #ifdef _WIN32
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_IDLE);
     GuestThread::SetThreadName(GetCurrentThreadId(), "Pipeline Task Consumer Thread");

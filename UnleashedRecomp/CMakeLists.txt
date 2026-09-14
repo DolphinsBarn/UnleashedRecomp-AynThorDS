@@ -403,7 +403,7 @@ if (ANDROID)
     # Must match applicationId in android-apk/app/build.gradle. Only a fallback constant:
     # storage_android.cpp resolves the real internal path at runtime via SDL.
     target_compile_definitions(UnleashedRecomp PRIVATE
-        "GAME_INSTALL_DIRECTORY=\"/data/data/com.sega.sonicunr/files/UnleashedRecomp\""
+        "GAME_INSTALL_DIRECTORY=\"/data/data/com.sega.sonicunr.thor/files/UnleashedRecomp\""
     )
 
     target_link_libraries(UnleashedRecomp PRIVATE adrenotools)

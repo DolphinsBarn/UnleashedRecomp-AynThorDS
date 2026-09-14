@@ -1,0 +1,30 @@
+name: Thor source checks
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "tools/XenonRecomp/**"
+      - "tools/tests/**"
+      - ".github/workflows/thor-checks.yml"
+  pull_request:
+    paths:
+      - "tools/XenonRecomp/**"
+      - "tools/tests/**"
+      - ".github/workflows/thor-checks.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  memory-order:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+      - name: Test PPC emission and ARM64 memory ordering
+        run: python3 tools/tests/test_memory_order.py
