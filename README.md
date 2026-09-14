@@ -1,8 +1,8 @@
 # Unleashed Recompiled for Android
 
 > **AYN Thor test fork — 0.5.3-thor.1:** This branch adds a candidate ARM64
-> memory-ordering fix and clearer hang diagnostics. Source tests pass; an APK
-> and real-device gameplay validation are still pending. See
+> memory-ordering fix and clearer hang diagnostics. Source tests and the ARM64
+> APK build pass; real-device gameplay validation is still pending. See
 > [Thor build and test notes](docs/THOR.md). The test APK uses a separate app
 > identity and is updated manually; the upstream instructions below describe
 > the original Android port.
