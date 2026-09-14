@@ -1,7 +1,50 @@
-# AYN Thor diagnostic fork: 0.5.3-thor.2
+# AYN Thor worker-limit test: 0.5.3-thor.3
 
-Status: the owner tested `0.5.3-thor.1` and it still crashed. Version
-`0.5.3-thor.2` adds diagnostics; it does not claim to fix that crash.
+Status: `thor.1` and the diagnostic `thor.2` still crash on the owner's
+Thor. `thor.3` limits the implicated game worker pool to one worker to test
+a concurrency hypothesis. It is not a confirmed root-cause fix and may reduce
+performance. Other worker pools and graphics settings are unchanged.
+
+## Second follow-up: captured caller stacks
+
+The `thor.2` log enters `ActD_MykonosAct1` at 28.876 seconds. At 40.765 seconds,
+a worker from entry `0x82F56618` attempts a null-target indirect call with
+`r3=0`. The matching saved native symbols resolve the earliest call chain to:
+
+`82F7E988 <- 82F7DCD8 <- 82F77188 <- 82F05180 <- 82EF1360 <- 82EF1670 <- 82F56618`.
+
+`82F7E988` dereferences a pair of input records to get object pointers, then
+calls a virtual method through an object that is null in the supplied log.
+The next captured failure passes through `82F8C308` and `82F7DAE0`.
+A later `KeBugCheck` runs on the main thread at 42.637 seconds, after the
+invalid calls. The earliest failure is the useful lead; suppressing the fatal
+stop would leave the earlier invalid state in place.
+
+The worker setup routine `82F56B68` takes its requested worker count in `r5`,
+stores the active count at pool offset 328, and starts `82F56618` workers.
+The test adapter caps positive requests to one worker for a new pool, leaving
+the original setup and synchronization bookkeeping intact. A second adapter
+at `82F56C38` prevents later growth by using that routine's existing
+capacity-exhausted return value (1). The resize caller `82F56E68` checks this
+return value and exits its growth loop. Zero and negative initialization
+requests retain their original behavior.
+
+No object/vtable call is patched out by this change. The earlier diagnostics
+remain. Log lines `Thor worker limit` report the requested and initialized
+counts so hardware testing can verify that the override actually ran.
+This does not establish a race or identify who damaged the object; fewer
+workers only tests one plausible contributor.
+
+The native adapter test compiles the actual patch file with instrumented
+stand-ins for the original guest calls. It covers count forwarding, an
+already populated pool, original return-value preservation, and later growth.
+It does not simulate game scheduling or prove hardware stability. Run
+`python3 tools/tests/test_thor_worker_limit.py`.
+
+Install over the previous test app (same signing key and package, version
+code 19). Keep the same settings and try the same route. A successful test
+must complete the level without broken collisions or animations. If it still
+fails, export the log with the new worker-count lines and caller stacks.
 
 ## Follow-up crash and diagnostic update
 

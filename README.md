@@ -1,8 +1,8 @@
 # Unleashed Recompiled for Android
 
-> **AYN Thor diagnostic fork — 0.5.3-thor.2:** This branch adds a candidate ARM64
-> memory-ordering fix and clearer failure diagnostics. The first test still
-> crashed on Thor; this update captures caller stacks to locate the defect. See
+> **AYN Thor worker-limit test — 0.5.3-thor.3:** This branch adds a candidate ARM64
+> memory-ordering changes and failure diagnostics. Earlier tests still crashed;
+> this build limits the failing worker pool to one worker as an experiment. See
 > [Thor build and test notes](docs/THOR.md). The test APK uses a separate app
 > identity and is updated manually; the upstream instructions below describe
 > the original Android port.
