@@ -40,8 +40,7 @@ Remember that installs only update in place when the signing key stays the same.
 
 1. Checks out this repository plus the private game-files repository, staging
    the latter into `UnleashedRecompLib/private/`.
-2. Downloads the pinned, checksum-verified official Linux DXC package with
-   `python3 tools/build/setup_linux_dxc.py`, then builds the host code-generation tools (XenonRecomp, XenosRecomp, file_to_c,
+2. Uses the repository's original Linux DXC compiler and builds the host code-generation tools (XenonRecomp, XenosRecomp, file_to_c,
    x_decompress) natively for the runner — a `UNLEASHED_RECOMP_HOST_TOOLS_ONLY`
    CMake pass using Clang, mirroring `build_host_tools.bat`. The host shader
    compiler includes the same `UNLEASHED_RECOMP` settings as the integrated build.

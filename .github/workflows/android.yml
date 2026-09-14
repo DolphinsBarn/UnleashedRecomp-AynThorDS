@@ -74,9 +74,6 @@ jobs:
       - name: Install Android NDK
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "ndk;$NDK_VERSION" >/dev/null
 
-      - name: Install pinned Linux shader compiler
-        run: python3 tools/build/setup_linux_dxc.py
-
       - name: Set up vcpkg
         run: |
           git clone https://github.com/microsoft/vcpkg thirdparty/vcpkg

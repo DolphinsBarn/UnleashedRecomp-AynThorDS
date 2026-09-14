@@ -48,11 +48,8 @@ pathdebug.txt
 log.txt
 log_prev.txt
 
-# Local dependency installation and downloaded host compilers
+# Local dependency installation
 /vcpkg_installed/
-/tools/XenosRecomp/thirdparty/dxc-bin/bin/
-/tools/XenosRecomp/thirdparty/dxc-bin/lib/
 # These are vendored build-system sources, not generated output.
-!/tools/build/
 !/tools/XenosRecomp/thirdparty/zstd/build/
 !/tools/XenosRecomp/thirdparty/zstd/build/cmake/
